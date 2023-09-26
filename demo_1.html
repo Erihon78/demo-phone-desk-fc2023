@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Время приключений #1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      html {
+        background: url(img/fc23-title-2.png) no-repeat center center;
+        background-size: cover;
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        padding-bottom: 3rem;
+        font: 25px/2 "PT Sans", sans-serif;
+        overflow: hidden;
+      }
+      p {
+        font-size: 2em;
+        margin-left: 1em;
+      }
+      .menu {
+        display: flex;
+        gap: 20px;
+        margin: 5px 10px;
+        position: relative;
+        z-index: 100;
+      }
+      .menu a {
+        color: #fe4241;
+      }
+      .menu .active {
+        text-decoration: none;
+        color: black;
+      }
+      input[type="file"]::file-selector-button {
+        margin-right: 20px;
+        border: none;
+        background: black;
+        padding: 10px 20px;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 1.6em;
+        cursor: pointer;
+        transition: background 0.2s ease-in-out;
+      }
+
+      input[type="file"]::file-selector-button:hover {
+        background: #333;
+      }
+
+      .form {
+        padding: 10px 5px;
+        border-radius: 6px;
+        margin-left: 50px;
+        display: flex;
+        justify-content: space-between;
+        gap: 40px;
+      }
+      .img-preview {
+        width: 80%;
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+        border: 1px solid #d6d6d6;
+      }
+      .input-file {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      @media only screen and (min-device-width: 320px) and (max-device-width: 480px) {
+        html {
+          background: none !important;
+        }
+        #text,
+        .menu {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="menu">
+      <a href="/" class="active">Демо #1</a>
+      <a href="/demo_2">Демо #2</a>
+      <a href="/demo_3">Демо #3</a>
+    </div>
+    <p id="text">Приложите фотографию</p>
+    <div id="form-mobile-preview">
+      <div class="form">
+        <input id="file" type="file" accept="image/*" />
+      </div>
+      <img class="img-preview" id="img" src="#" alt="preview" />
+    </div>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const preview = document.getElementById("form-mobile-preview");
+    const img = document.getElementById("img");
+
+    if (isMobile) {
+      preview.classList.add("input-file");
+    }
+
+    const fileInput = document.getElementById("file");
+
+    const toBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+
+    fileInput.onchange = async (event) => {
+      const [file] = fileInput.files;
+      if (file) {
+        const base64 = await toBase64(file);
+        socket.emit("image preview", base64);
+      }
+    };
+
+    socket.on("image preview", (msg) => {
+      const base64 = msg;
+      img.src = base64;
+      if (!isMobile) {
+        img.style.display = "block";
+      }
+    });
+  </script>
+</html>
